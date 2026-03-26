@@ -1,0 +1,113 @@
+/* Estructura general del body */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #755c73;
+  color: #222;
+  margin: 0;
+  padding: 20px;
+}
+
+/* Contenedor para que parezca una tarjeta */
+.cv-container {
+  max-width: 900px;
+  margin: 0 auto;
+  background-color: white;
+  padding: 30px;
+  border-radius: 12px;
+}
+
+/* Separar el header y centrarlo */
+header {
+  text-align: center;
+  border-bottom: 2px solid #eadbe8;
+  padding-bottom: 20px;
+  margin-bottom: 30px;
+}
+
+/* Color y estilo del nombre principal */
+h1 {
+  color: #85127b;
+  font-size: 36px;
+  margin-bottom: 10px;
+}
+
+/* Estilo párrafo del header */
+header p {
+  font-size: 18px;
+  color: #555;
+}
+
+/* Margen en cada sección */
+section {
+  margin-bottom: 25px;
+}
+
+/* Estilo subtítulos */
+h2 {
+  color: #0f172a;
+  font-size: 24px;
+  border-left: 5px solid #85127b;
+  padding-left: 10px;
+  margin-bottom: 15px;
+}
+
+/* Agregar margen e interlineado a los párrafos */
+p {
+  line-height: 1.6;
+  margin: 8px 0;
+}
+
+/* Estilos listas */
+ul {
+  padding-left: 20px;
+}
+
+li {
+  margin-bottom: 8px;
+}
+
+/* Color a enlaces y subrayado en hover */
+a {
+  color: #5d88e4;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Dar estilo a foto para que sea redondam y tenga borde de color */
+img {
+  width: 150px;
+  border-radius: 50%;
+  margin-top: 15px;
+  border: 3px solid #85127b;
+}
+
+/* Estilos para tabla de idiomas */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+th,
+td {
+  border: 1px solid #e0cbe1;
+  padding: 10px;
+  text-align: left;
+}
+
+th {
+  background-color: #f0e2ec;
+}
+
+/* Estilo footer */
+footer {
+  text-align: center;
+  margin-top: 30px;
+  padding-top: 15px;
+  border-top: 1px solid #eadbe5;
+  color: #666;
+  font-size: 14px;
+}
