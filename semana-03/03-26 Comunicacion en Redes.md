@@ -478,3 +478,45 @@ Si frontend y backend están en la misma máquina usando `localhost`, los proble
 | **UDP** | El canillita que lanza el diario por la ventana del auto cada mañana. Sale disparado hacia tu casa sin esperar confirmación. La mayoría llegan, algunos caen en el jardín del vecino — no importa, ya viene el de mañana. |
 | **Puerto** | El número de local dentro de un mall. La dirección del mall te lleva al edificio (IP), pero el número de local te dice exactamente a qué negocio entrar: local 80 es la tienda de ropa, local 443 es la joyería, local 3000 es el nuevo ciber-café. |
 | **HTTP** | El protocolo de atención del restaurante: el cliente siempre habla primero, hace un pedido usando palabras específicas ("quiero", "cancela", "modifica"), el mesero responde con un código ("listo", "no existe ese plato", "error en cocina") y entrega lo solicitado. Nadie improvisa — hay un guión definido que ambos conocen. |
+
+## 🧠 Bonus - HTTPS, REST y Endpoint
+
+### ¿Qué es HTTPS?
+
+HTTPS es HTTP con una capa de seguridad encima. La S significa *Secure*, y esa seguridad la provee TLS — el protocolo de cifrado que mencionamos anteriormente.
+
+Cuando una comunicación viaja por HTTP normal, los datos van en texto plano. Cualquier persona que intercepte el tráfico en el camino puede leerlos sin problema — contraseñas, datos de tarjetas, mensajes privados. HTTPS resuelve esto cifrando todo antes de enviarlo, de modo que aunque alguien intercepte los paquetes, solo ve datos ilegibles.
+
+El proceso funciona así: antes de enviar cualquier dato, cliente y servidor negocian una clave de cifrado única para esa sesión. Todo lo que viaje después va encriptado con esa clave. Este proceso se llama TLS Handshake y ocurre automáticamente, justo después del handshake TCP y antes de la primera petición HTTP.
+
+En la práctica, como developer lo que cambia es poco: usas `https://` en la URL, el servidor necesita un certificado SSL válido (en producción lo provee Let's Encrypt u otros; en desarrollo local no se usa), y el puerto por defecto cambia de 80 a 443. El resto del comportamiento HTTP es idéntico.
+
+### ¿Qué es REST?
+
+REST (Representational State Transfer) es un conjunto de convenciones para diseñar APIs usando HTTP de forma predecible y consistente. No es un protocolo ni una tecnología — es un estilo de arquitectura, un acuerdo sobre cómo nombrar rutas y usar los métodos HTTP.
+
+La idea central es que cada URL representa un *recurso* (un usuario, un producto, un pedido), y los métodos HTTP expresan qué quieres hacer con ese recurso:
+
+```
+GET    /api/productos        → listar todos los productos
+GET    /api/productos/42     → obtener el producto 42
+POST   /api/productos        → crear un producto nuevo
+PUT    /api/productos/42     → actualizar el producto 42
+DELETE /api/productos/42     → eliminar el producto 42
+```
+
+Lo valioso de REST es la consistencia. Si una API sigue estas convenciones, cualquier developer puede intuir cómo usarla sin leer documentación extensa. Una API que sigue estas reglas se llama **API RESTful**.
+
+### ¿Qué es un Endpoint?
+
+Un endpoint es una URL específica dentro de una API a la que puedes hacer una petición HTTP. Es el punto de entrada a una funcionalidad concreta del backend.
+
+Si la API es el restaurante, el endpoint es el plato específico del menú. No pides "comida" en general — pides exactamente lo que está listado.
+
+```
+https://api.miapp.com/api/usuarios         ← endpoint: lista de usuarios
+https://api.miapp.com/api/usuarios/42      ← endpoint: usuario específico
+https://api.miapp.com/api/usuarios/42/pedidos  ← endpoint: pedidos de ese usuario
+```
+
+Cada endpoint combina tres cosas que ya vimos: una URL (la dirección del recurso), un método HTTP (la intención), y una respuesta esperada. En el día a día del desarrollo, cuando el backend dice "te expongo un endpoint", significa que creó una ruta lista para recibir peticiones desde el frontend.
