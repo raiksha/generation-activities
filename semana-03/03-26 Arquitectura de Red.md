@@ -476,3 +476,77 @@ journalctl -u miapp --since "10 min ago"
 * Cada uno tiene sus propios accesos y controles.
 * El personal de una terminal no puede cruzar a otra sin pasar por un punto de control.
 * La separación existe por seguridad, organización y flujo — no porque sean aeropuertos distintos.
+
+## 🧠 Bonus — Nivel Bootcamp Pro
+
+### ¿Qué es un VPC en cloud?
+
+Un VPC (*Virtual Private Cloud*) es tu **red privada dentro de un proveedor cloud**. Cuando contratas infraestructura en AWS, Google Cloud o Azure, no estás conectando tus servidores directamente a internet — los estás poniendo dentro de una red virtual aislada que tú controlas.
+
+Piénsalo como arrendar un piso completo en un edificio compartido: el edificio es el cloud provider, y tu piso es el VPC. Puedes decorarlo como quieras, decidir quién entra, qué puertas existen y qué ventanas dan hacia afuera.
+
+Dentro de un VPC puedes:
+- Crear **subredes** públicas y privadas
+- Definir **reglas de firewall** (Security Groups)
+- Controlar qué tiene acceso a internet y qué no
+- Conectar múltiples VPCs entre sí si es necesario
+
+```
+VPC: 10.0.0.0/16
+├── Subred pública  10.0.1.0/24  → servidor web (accesible desde internet)
+├── Subred privada  10.0.2.0/24  → base de datos (solo accesible internamente)
+└── Subred admin    10.0.3.0/24  → herramientas internas (acceso restringido)
+```
+
+> 💡 Todo proyecto serio en cloud vive dentro de un VPC. Si alguna vez usas AWS o GCP en el bootcamp, ya estás operando dentro de uno aunque no lo hayas configurado tú.
+
+---
+
+### ¿Qué es una IP privada vs pública?
+
+Son dos tipos de dirección IP con propósitos distintos:
+
+**IP Pública**
+Es la dirección que **identifica a tu dispositivo o servidor en internet**. Es única en el mundo en un momento dado. Cuando accedes a un sitio web desde tu casa, el servidor ve tu IP pública. Cuando haces deploy de una app, le asignas una IP pública para que el mundo pueda encontrarla.
+
+**IP Privada**
+Es la dirección que **identifica a un dispositivo dentro de una red local**. No es visible desde internet — solo existe dentro de tu red doméstica, corporativa o VPC. Varios dispositivos en el mundo pueden tener la misma IP privada sin conflicto porque están en redes distintas.
+
+| | IP Pública | IP Privada |
+|---|---|---|
+| **Visible desde internet** | Sí | No |
+| **Única globalmente** | Sí | No |
+| **Asignada por** | ISP o cloud provider | Router o configuración local |
+| **Rangos comunes** | Variables | `192.168.x.x`, `10.x.x.x`, `172.16.x.x` |
+| **Ejemplo de uso** | Servidor web, app deployada | Base de datos, servidor interno |
+
+> 💡 En cloud, tu servidor web tiene una IP pública (para recibir tráfico de usuarios) y una IP privada (para comunicarse internamente con la base de datos). Las dos coexisten en el mismo servidor.
+
+---
+
+### ¿Qué es un Load Balancer?
+
+Un load balancer (*balanceador de carga*) es un componente que **distribuye el tráfico entrante entre varios servidores** para que ninguno se sobrecargue.
+
+Imagina una fila de cajas en un supermercado: si todos van a la misma caja, se forma una cola enorme. El load balancer es el empleado en la entrada que mira cuál caja está más libre y te manda para allá.
+
+**¿Por qué se usa?**
+- **Escalabilidad** — si un servidor no da abasto, agregas otro y el load balancer reparte el trabajo
+- **Alta disponibilidad** — si un servidor cae, el load balancer deja de mandarle tráfico automáticamente
+- **Rendimiento** — los usuarios siempre llegan al servidor más disponible en ese momento
+
+**Cómo encaja en la arquitectura:**
+
+```
+[Usuarios en internet]
+        ↓
+  [Load Balancer]        ← única IP pública visible
+      ↙   ↘
+[Servidor 1] [Servidor 2]   ← IPs privadas, no visibles
+        ↓
+  [Base de datos]
+```
+
+Los usuarios siempre hablan con el load balancer — nunca saben cuántos servidores hay detrás ni cuál les respondió.
+
+> 💡 En plataformas como Railway, Render o Heroku, el load balancer ya está incluido y configurado por defecto. En AWS se llama ELB (*Elastic Load Balancer*) y es uno de los servicios más usados.
