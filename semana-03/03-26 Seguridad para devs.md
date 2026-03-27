@@ -1058,3 +1058,184 @@ Todos los conceptos mapeados a un hospital público:
 | **Intrusión** | Una persona sin identificación que aprovecha la puerta entornada, se pone una bata blanca que encontró en el pasillo y camina por zonas restringidas sin que nadie le pregunte nada |
 | **Seguridad de red** | El sistema completo del hospital que regula quién entra al edificio, qué puertas puede abrir adentro, qué puede llevarse al salir y quién vigila los pasillos — no es una sola cosa sino todo funcionando en conjunto |
 
+## 🧠 Bonus — JWT, Tokens y Rate Limiting
+
+### ¿Qué es autenticación con tokens?
+
+Para entender JWT primero hay que entender el problema que los tokens resuelven.
+
+HTTP es un protocolo **sin memoria** — cada request es independiente y el servidor no recuerda nada del anterior. Esto significa que sin algún mecanismo adicional, el servidor no puede saber si la persona que hace un request ya inició sesión o no.
+
+Históricamente esto se resolvía con **sesiones**: el servidor guardaba en su memoria que el usuario X estaba autenticado, y le daba al cliente un ID de sesión para presentar en cada request. Funciona, pero tiene un problema: el servidor tiene que mantener ese estado, lo que complica escalar la aplicación.
+
+Los **tokens** resuelven esto de otra forma: en lugar de que el servidor recuerde quién está autenticado, le entrega al cliente un documento firmado que contiene toda la información necesaria. El cliente lo presenta en cada request y el servidor lo verifica — sin necesitar recordar nada.
+
+```
+Sesiones (stateful):               Tokens (stateless):
+                                   
+Cliente → login → Servidor         Cliente → login → Servidor
+Servidor guarda: "usuario 42       Servidor genera un token
+está autenticado"                  con la info del usuario
+Servidor → session ID → Cliente    Servidor → token → Cliente
+
+Cliente → request + session ID     Cliente → request + token
+Servidor busca session ID          Servidor verifica el token
+en su memoria                      (no necesita memoria)
+```
+
+---
+
+### ¿Qué es JWT?
+
+JWT (JSON Web Token, pronunciado "yot") es el **formato estándar más usado para implementar autenticación con tokens**. Es básicamente un documento JSON firmado digitalmente que contiene información sobre el usuario.
+
+Un JWT tiene tres partes separadas por puntos:
+
+```
+eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjQyfQ.xK92mP7Lm...
+        ↑                      ↑                  ↑
+    HEADER                  PAYLOAD            SIGNATURE
+  (algoritmo              (datos del          (firma digital)
+   de firma)               usuario)
+```
+
+Cada parte es JSON codificado en Base64. Decodificado se ve así:
+
+```json
+// HEADER
+{
+  "alg": "HS256",
+  "typ": "JWT"
+}
+
+// PAYLOAD — la información que el servidor necesita
+{
+  "userId": 42,
+  "email": "maria@mail.com",
+  "role": "admin",
+  "exp": 1714000000  // fecha de expiración
+}
+
+// SIGNATURE — generada con una clave secreta que solo el servidor conoce
+HMACSHA256(header + "." + payload, clave_secreta)
+```
+
+La firma es lo que hace al JWT confiable. El cliente puede leer el payload (no está cifrado, solo codificado), pero **no puede modificarlo** — si lo modifica, la firma deja de ser válida y el servidor lo rechaza.
+
+#### El flujo completo
+
+```
+1. Usuario hace login con email y contraseña
+             ↓
+2. Servidor verifica credenciales
+             ↓
+3. Servidor genera JWT firmado con su clave secreta
+             ↓
+4. Servidor envía JWT al cliente
+             ↓
+5. Cliente guarda el JWT (localStorage o cookie)
+             ↓
+6. En cada request, cliente envía el JWT en el header:
+   Authorization: Bearer eyJhbGci...
+             ↓
+7. Servidor verifica la firma del JWT
+   → Si es válida: procesa el request
+   → Si no es válida o expiró: 401 Unauthorized
+```
+
+#### Lo que nunca debe hacerse con JWT
+
+```javascript
+// ❌ Guardar información sensible en el payload
+{
+  "userId": 42,
+  "password": "MiContraseña123",  // el payload es legible por el cliente
+  "tarjeta": "4111111111111111"    // nunca poner datos sensibles aquí
+}
+
+// ❌ JWT sin expiración
+{
+  "userId": 42
+  // sin "exp" → el token es válido para siempre
+  // si es robado, el atacante tiene acceso indefinido
+}
+
+// ✅ JWT mínimo y con expiración
+{
+  "userId": 42,
+  "role": "user",
+  "exp": 1714000000  // expira en 1 hora, 24 horas, según el caso
+}
+```
+
+---
+
+### ¿Qué es Rate Limiting?
+
+Rate limiting es **poner un límite a cuántas veces alguien puede hacer una acción en un período de tiempo determinado**. Es el equivalente digital del cartel de "máximo 3 turnos por persona" en una fila.
+
+Sin rate limiting, un atacante puede automatizar requests indefinidamente:
+
+```
+Sin rate limiting — ataque de fuerza bruta al login:
+
+10:00:00 → POST /login { password: "000000" } → 401
+10:00:00 → POST /login { password: "000001" } → 401
+10:00:00 → POST /login { password: "000002" } → 401
+... (10.000 intentos por segundo)
+10:00:03 → POST /login { password: "482901" } → 200 ✅
+```
+
+Con rate limiting:
+
+```
+Con rate limiting — mismo ataque:
+
+10:00:00 → POST /login { password: "000000" } → 401
+10:00:01 → POST /login { password: "000001" } → 401
+10:00:02 → POST /login { password: "000002" } → 401
+10:00:03 → POST /login { password: "000003" } → 401
+10:00:04 → POST /login { password: "000004" } → 401
+10:00:05 → POST /login { password: "000005" } → 429 Too Many Requests
+           "Has excedido el límite. Intenta en 15 minutos."
+
+→ Para probar 1.000.000 de combinaciones necesitaría
+  años en lugar de segundos
+```
+
+#### Dónde aplicar rate limiting
+
+No solo en el login — hay varios endpoints que lo necesitan:
+
+| Endpoint | Por qué limitarlo |
+|---|---|
+| `POST /login` | Prevenir fuerza bruta de contraseñas |
+| `POST /registro` | Prevenir creación masiva de cuentas falsas |
+| `POST /recuperar-password` | Prevenir spam de emails y enumeración de usuarios |
+| `GET /api/*` | Prevenir abuso general de la API |
+| `POST /comentarios` | Prevenir spam de contenido |
+
+#### Implementación básica
+
+```javascript
+const rateLimit = require('express-rate-limit');
+
+// Límite específico para login
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,  // ventana de 15 minutos
+  max: 5,                     // máximo 5 intentos por ventana
+  message: {
+    error: 'Demasiados intentos. Intenta nuevamente en 15 minutos.'
+  },
+  standardHeaders: true       // incluye info del límite en los headers
+});
+
+// Límite general para toda la API
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000,        // ventana de 1 minuto
+  max: 100                    // máximo 100 requests por minuto
+});
+
+app.post('/login', loginLimiter, autenticar);
+app.use('/api/', apiLimiter);
+```
