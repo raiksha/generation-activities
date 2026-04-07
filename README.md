@@ -15,8 +15,9 @@ El contenido se irá subiendo de forma cronológica por módulos semanales, en c
 
 En cada carpeta habrán archivos con la resolución de las actividades. Cada archivo se nombrará con la fecha en formato MM-DD más un breve título relativo a la actividad, tal que:
 
-* `03-10 Hello World.md`
-* `03-11 MarkDown.md`
+* `03-10_Hello_World.md`
+* `03-11_MarkDown.md`
+* `/03-25_CSS` -> Carpeta
 
 ---
 *Este es un repositorio estrictamente académico.*
